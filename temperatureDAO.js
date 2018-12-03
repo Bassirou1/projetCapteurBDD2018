@@ -73,5 +73,3 @@ exports.modeTemperature = async function modeTemperature(){
     return modTemp.rows;
 
 };
-
-
