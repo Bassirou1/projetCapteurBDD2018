@@ -5,3 +5,7 @@ ProjetCapture-java\.iml
 
 out/
 /bin/
+
+lib/commons-pool2-2\.6\.0\.jar
+
+lib/jedis-3\.0\.0-rc1\.jar

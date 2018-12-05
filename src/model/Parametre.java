@@ -40,5 +40,13 @@ public class Parametre {
         this.inferieurA = inferieurA;
     }
 
-
+    @Override
+    public String toString() {
+        return "Parametre{" +
+                "nbHeure=" + nbHeure +
+                ", nbElement=" + nbElement +
+                ", superieurA=" + superieurA +
+                ", inferieurA=" + inferieurA +
+                '}';
+    }
 }

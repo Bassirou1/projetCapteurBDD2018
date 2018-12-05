@@ -1,6 +1,5 @@
 package controleur;
 
-import donnees.ParametreDAO;
 import donnees.TemperatureDAO;
 import javafx.fxml.FXML;
 import javafx.scene.control.RadioButton;
@@ -8,6 +7,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.text.Text;
 import model.Parametre;
 import model.Temperature;
+import redis.clients.jedis.Jedis;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.util.Calendar;
 
 public class ControleurVueTableauDeBord {
     protected TemperatureDAO temperatureDAO;
@@ -83,6 +89,39 @@ public class ControleurVueTableauDeBord {
             double inferieur = Double.parseDouble(inferieurA.getText());
             initChoixSelect();
 
+            try{
+
+                System.out.println("=====JEDIS=====");
+                Jedis cache = new Jedis();
+
+
+                Parametre parametre = new Parametre();
+                parametre.setNbHeure(heure);
+                parametre.setNbElement(element);
+                parametre.setSuperieurA((int) superieur);
+                parametre.setInferieurA((int) inferieur);
+
+                String concatenationParametre = nbHeure.getText() + nbElement.getText() + superieurA.getText() + inferieurA.getText();
+                int hash = concatenationParametre.hashCode();
+
+                System.out.println(parametre);
+                System.out.println("concatenation : " + concatenationParametre);
+                System.out.println("hash  : " + hash);
+
+                byte[] serialisation = serialiser(parametre.toString());
+                System.out.println("serialisarion : " + serialisation);
+
+
+                cache.set(Integer.toString(hash), serialisation.toString());
+                cache.set("timestamp", Calendar.getInstance().getTimeInMillis() + "");
+                String nomElement1 = cache.get(Integer.toString(hash));
+                System.out.println("nomElement1 : " + nomElement1);
+
+
+            }catch(Exception e){
+                System.out.println(e);
+            }
+
             controleurPrincipal.modifierParametre(heure, element, superieur,inferieur,boolHeure);
 
             if (boolHeure) {
@@ -111,11 +150,11 @@ public class ControleurVueTableauDeBord {
 
         Temperature temperature = controleurPrincipal.rechercherTemperature();
 
-        moyenne.setText((temperature.getMoyenne() != 999999) ? "" + temperature.getMoyenne() : "Valeur erronée");
-        mode.setText((temperature.getMode() != 999999) ? "" + temperature.getMode() : "Valeur erronée");
-        min.setText((temperature.getMinimum() != 999999) ? "" + temperature.getMinimum() : "Valeur erronée");
-        max.setText((temperature.getMaximum() != 999999) ? "" + temperature.getMaximum() : "Valeur erronée");
-        mediane.setText((temperature.getMediane() != 999999) ? "" + temperature.getMediane() : "Valeur erronée");
+        moyenne.setText((temperature.getMoyenne() != 999999) ? "" + temperature.getMoyenne() : "Valeur erronï¿½e");
+        mode.setText((temperature.getMode() != 999999) ? "" + temperature.getMode() : "Valeur erronï¿½e");
+        min.setText((temperature.getMinimum() != 999999) ? "" + temperature.getMinimum() : "Valeur erronï¿½e");
+        max.setText((temperature.getMaximum() != 999999) ? "" + temperature.getMaximum() : "Valeur erronï¿½e");
+        mediane.setText((temperature.getMediane() != 999999) ? "" + temperature.getMediane() : "Valeur erronï¿½e");
     }
 
     private void initChoixSelect() {
@@ -124,5 +163,13 @@ public class ControleurVueTableauDeBord {
 
     public Text getErreur() {
         return erreur;
+    }
+
+    private byte[] serialiser(Object object) throws IOException {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             ObjectOutput out = new ObjectOutputStream(bos)) {
+            out.writeObject(object);
+            return bos.toByteArray();
+        }
     }
 }
