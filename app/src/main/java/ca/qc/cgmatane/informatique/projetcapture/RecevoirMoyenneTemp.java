@@ -31,7 +31,7 @@ public class RecevoirMoyenneTemp extends AsyncTask<String, String, String> {
         OkHttpClient client = new OkHttpClient();
 
         Request request = new Request.Builder()
-                .url("http://54.39.144.87:8080/temperature/moyenne")
+                .url("https://napi.capture.tenam.re/temperature/moyenne")
                 .build();
 
         try
@@ -46,7 +46,7 @@ public class RecevoirMoyenneTemp extends AsyncTask<String, String, String> {
             JSONArray jsonArray = new JSONArray(jsonDonneesString);
 
             JSONObject jsonObject = jsonArray.getJSONObject(0);
-            String temperatureString = jsonObject.getString("moyenne_temp");
+            String temperatureString = jsonObject.getString("moyenne_temperature");
             String date = jsonObject.getString("timestamp");
 
             this.temperature = new Temperature(temperatureString, date);
