@@ -89,38 +89,42 @@ public class ControleurVueTableauDeBord {
             double inferieur = Double.parseDouble(inferieurA.getText());
             initChoixSelect();
 
-            try{
+            
+            //=====JEDIS======
+            Jedis cache = new Jedis();
 
-                System.out.println("=====JEDIS=====");
-                Jedis cache = new Jedis();
+            Parametre parametre = new Parametre();
+            parametre.setNbHeure(heure);
+            parametre.setNbElement(element);
+            parametre.setSuperieurA((int) superieur);
+            parametre.setInferieurA((int) inferieur);
 
+            String concatenationParametre = nbHeure.getText() + nbElement.getText() + superieurA.getText() + inferieurA.getText();
+            int hash = concatenationParametre.hashCode();
 
-                Parametre parametre = new Parametre();
-                parametre.setNbHeure(heure);
-                parametre.setNbElement(element);
-                parametre.setSuperieurA((int) superieur);
-                parametre.setInferieurA((int) inferieur);
+            if (!existeDansCache(hash, cache)){
+                try{
 
-                String concatenationParametre = nbHeure.getText() + nbElement.getText() + superieurA.getText() + inferieurA.getText();
-                int hash = concatenationParametre.hashCode();
+                    System.out.println(parametre);
+                    System.out.println("concatenation : " + concatenationParametre);
+                    System.out.println("hash  : " + hash);
 
-                System.out.println(parametre);
-                System.out.println("concatenation : " + concatenationParametre);
-                System.out.println("hash  : " + hash);
-
-                byte[] serialisation = serialiser(parametre.toString());
-                System.out.println("serialisarion : " + serialisation);
-
-
-                cache.set(Integer.toString(hash), serialisation.toString());
-                cache.set("timestamp", Calendar.getInstance().getTimeInMillis() + "");
-                String nomElement1 = cache.get(Integer.toString(hash));
-                System.out.println("nomElement1 : " + nomElement1);
+                    byte[] serialisation = serialiser(parametre.toString());
+                    System.out.println("serialisarion : " + serialisation);
 
 
-            }catch(Exception e){
-                System.out.println(e);
+                    cache.set(Integer.toString(hash), serialisation.toString());
+                    cache.set("timestamp", Calendar.getInstance().getTimeInMillis() + "");
+                    String nomElement1 = cache.get(Integer.toString(hash));
+                    System.out.println("nomElement1 : " + nomElement1);
+
+
+                }catch(Exception e){
+                    System.out.println(e);
+                }
             }
+
+
 
             controleurPrincipal.modifierParametre(heure, element, superieur,inferieur,boolHeure);
 
@@ -171,5 +175,9 @@ public class ControleurVueTableauDeBord {
             out.writeObject(object);
             return bos.toByteArray();
         }
+    }
+
+    private boolean existeDansCache(int hash, Jedis cache){
+        return cache.exists(Integer.toString(hash));
     }
 }
