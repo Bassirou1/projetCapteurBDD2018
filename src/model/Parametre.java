@@ -1,6 +1,8 @@
 package model;
 
-public class Parametre {
+import java.io.Serializable;
+
+public class Parametre implements Serializable {
 
     protected int nbHeure;
     protected int nbElement;

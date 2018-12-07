@@ -7,12 +7,14 @@ import javafx.scene.control.TextField;
 import javafx.scene.text.Text;
 import model.Parametre;
 import model.Temperature;
+import org.apache.commons.lang.SerializationUtils;
 import redis.clients.jedis.Jedis;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.Calendar;
 
 public class ControleurVueTableauDeBord {
@@ -89,7 +91,7 @@ public class ControleurVueTableauDeBord {
             double inferieur = Double.parseDouble(inferieurA.getText());
             initChoixSelect();
 
-            
+
             //=====JEDIS======
             Jedis cache = new Jedis();
 
@@ -99,29 +101,40 @@ public class ControleurVueTableauDeBord {
             parametre.setSuperieurA((int) superieur);
             parametre.setInferieurA((int) inferieur);
 
-            String concatenationParametre = nbHeure.getText() + nbElement.getText() + superieurA.getText() + inferieurA.getText();
+            String concatenationParametre = nbHeure.getText() + " " + nbElement.getText() + " " + superieurA.getText() + " " + inferieurA.getText();
             int hash = concatenationParametre.hashCode();
 
             if (!existeDansCache(hash, cache)){
                 try{
 
-                    System.out.println(parametre);
-                    System.out.println("concatenation : " + concatenationParametre);
-                    System.out.println("hash  : " + hash);
+                    System.out.println("Parametre : " + parametre);
+                    System.out.println("Concatenation : " + concatenationParametre);
+                    System.out.println("Hash  : " + hash);
 
-                    byte[] serialisation = serialiser(parametre.toString());
-                    System.out.println("serialisarion : " + serialisation);
+                    /*byte[] serialisation = SerializationUtils.serialize(toString(parametre));
+                    System.out.println("Serialisation: " + serialisation);*/
 
+                    System.out.println(" Encoded serialized version " );
+                    System.out.println(toString(parametre));
 
-                    cache.set(Integer.toString(hash), serialisation.toString());
+                    cache.set(Integer.toString(hash), toString(parametre));
                     cache.set("timestamp", Calendar.getInstance().getTimeInMillis() + "");
+
                     String nomElement1 = cache.get(Integer.toString(hash));
-                    System.out.println("nomElement1 : " + nomElement1);
+                    System.out.println("Valeur associée au hash dans le cache : " + nomElement1);
 
 
                 }catch(Exception e){
                     System.out.println(e);
                 }
+            }else{
+                System.out.println("Reconstitution de l'objet");
+                String serialisationCache = cache.get(Integer.toString(hash));
+                System.out.println("SérialisationCache : " + serialisationCache);
+
+                Parametre some = ( Parametre ) fromString(serialisationCache);
+                System.out.println( "\n\nObjet reconstitué");
+                System.out.println( some );
             }
 
 
@@ -169,7 +182,7 @@ public class ControleurVueTableauDeBord {
         return erreur;
     }
 
-    private byte[] serialiser(Object object) throws IOException {
+    /*private byte[] serialiser(Object object) throws IOException {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
              ObjectOutput out = new ObjectOutputStream(bos)) {
             out.writeObject(object);
@@ -177,7 +190,50 @@ public class ControleurVueTableauDeBord {
         }
     }
 
+    private Object deserialiser(byte[] bytes) throws IOException, ClassNotFoundException {
+        ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+        ObjectInput in = null;
+        try {
+            in = new ObjectInputStream(bis);
+            Object o = in.readObject();
+            return o;
+
+        } finally {
+            try {
+                if (in != null) {
+                    in.close();
+                }
+            } catch (IOException ex) {
+                // ignore close exception
+            }
+        }
+    }*/
+
     private boolean existeDansCache(int hash, Jedis cache){
         return cache.exists(Integer.toString(hash));
+    }
+
+    private static Object fromString( String s ) throws IOException ,
+            ClassNotFoundException {
+        byte [] data = Base64.getDecoder().decode( s );
+        ObjectInputStream ois = new ObjectInputStream( new ByteArrayInputStream(  data ) );
+        Object o  = ois.readObject();
+        ois.close();
+        return o;
+    }
+
+    /**
+     * Receive  Serializable
+     * Use      Base64 https://docs.oracle.com/javase/8/docs/api/java/util/Base64.html
+     * Use      ByteArrayOutputStream https://docs.oracle.com/javase/7/docs/api/java/io/ByteArrayOutputStream.html
+     * Use      ObjectOutputStream https://docs.oracle.com/javase/7/docs/api/java/io/ObjectOutputStream.html
+     * Return   Object
+     */
+    private static String toString( Serializable o ) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream( baos );
+        oos.writeObject( o );
+        oos.close();
+        return Base64.getEncoder().encodeToString(baos.toByteArray());
     }
 }
