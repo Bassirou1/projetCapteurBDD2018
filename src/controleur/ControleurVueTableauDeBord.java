@@ -111,10 +111,8 @@ public class ControleurVueTableauDeBord {
                     System.out.println("Concatenation : " + concatenationParametre);
                     System.out.println("Hash  : " + hash);
 
-                    /*byte[] serialisation = SerializationUtils.serialize(toString(parametre));
-                    System.out.println("Serialisation: " + serialisation);*/
 
-                    System.out.println(" Encoded serialized version " );
+                    System.out.println(" Version encodée " );
                     System.out.println(toString(parametre));
 
                     cache.set(Integer.toString(hash), toString(parametre));
@@ -132,9 +130,15 @@ public class ControleurVueTableauDeBord {
                 String serialisationCache = cache.get(Integer.toString(hash));
                 System.out.println("SérialisationCache : " + serialisationCache);
 
-                Parametre some = ( Parametre ) fromString(serialisationCache);
-                System.out.println( "\n\nObjet reconstitué");
-                System.out.println( some );
+                Parametre paramCache = (Parametre) fromString(serialisationCache);
+                System.out.println("\n\nObjet reconstitué");
+                System.out.println(paramCache);
+
+                nbHeure.setText(Integer.toString(paramCache.getNbHeure()));
+                nbElement.setText(Integer.toString(paramCache.getNbElement()));
+                superieurA.setText((Float.toString(paramCache.getSuperieurA())));
+                inferieurA.setText((Float.toString(paramCache.getInferieurA())));
+
             }
 
 
